@@ -18,17 +18,11 @@ func GetFileSize(serverConn *Mysock, filename string) uint64 {
 }
 
 // SendFileSize gets filename and sends filesize to client
-func SendFileSize(clientConn *Mysock) string {
+func SendFileSize(clientConn *Mysock, sizeData map[uint64]uint64, hashData map[string]uint64) string {
 	ReadInfo(clientConn, BUFSIZ)
 	filename := string(GetBufData(clientConn))
 	fmt.Println("Requested filename:", filename)
-	filename = libpath + filename
-	fmt.Println("Opening", filename)
-	file, err := os.Open(filename)
-	handleError(err)
-	defer file.Close()
-	fi, _ := file.Stat()
-	filesize := uint64(fi.Size())
+	filesize := sizeData[hashData[filename]]
 	Write(clientConn, filesize)
 
 	return filename
@@ -71,13 +65,15 @@ func GetChunk(serverConn *Mysock, chunkInfo *ChunkReq, filename string) {
 }
 
 // SendChunk gets chunk request and sends that chunk
-func SendChunk(clientConn *Mysock, filename string) {
+func SendChunk(clientConn *Mysock, hashData map[uint64]string, libpath string) {
 	var chunkInfo ChunkReq
 	ReadObj(clientConn, &chunkInfo)
 	fmt.Println("Got the chunkinfo")
 	fmt.Println("The requested chunkInfo is:", chunkInfo)
 
-	// filename = libpath + filename
+	filename := hashData[chunkInfo.FileHash]
+
+	filename = libpath + filename
 	fmt.Println("Opening", filename)
 	file, err := os.Open(filename)
 	handleError(err)
