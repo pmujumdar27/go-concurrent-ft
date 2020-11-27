@@ -44,10 +44,10 @@ func GetChunk(serverConn *Mysock, chunkInfo *ChunkReq, filename string) {
 
 	offset := int64(chunkInfo.LeftOffset)
 	fmt.Println("Offset is:", offset)
-	file.Seek(offset, 0)
+	// file.Seek(offset, 0) //because i'm writting to small files of size chunksize
 
 	for {
-		fmt.Println("Bytes remaining:", size)
+		// fmt.Println("Bytes remaining:", size)
 		if size < BUFSIZ {
 			recvBuf = make([]byte, size)
 		}

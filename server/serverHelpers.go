@@ -28,7 +28,15 @@ var hashData map[uint64]string
 var sizeData map[uint64]uint64
 
 func handleClient(clientConn *dataservice.Mysock) {
-	dataservice.SendChunk(clientConn, hashData, LIBPATH)
+	for {
+		var contFlag int64
+		dataservice.ReadObj(clientConn, &contFlag)
+		dataservice.SendChunk(clientConn, hashData, LIBPATH)
+		if contFlag == int64(0) {
+			break
+		}
+	}
+	// dataservice.Close(clientConn)
 }
 
 func handleController(controllerConn *dataservice.Mysock, listenAddr string) {

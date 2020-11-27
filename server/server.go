@@ -35,9 +35,8 @@ func main() {
 	handleError(err, "Error in listening for clients")
 	defer listener.Close()
 
-	fmt.Println("Listening for clients")
-
 	for {
+		fmt.Println("Listening for clients")
 		client, err := listener.Accept()
 		handleError(err, "Error in accepting client connection")
 		clientConn := dataservice.CreateMysock(client)
