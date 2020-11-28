@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"sync"
 
 	"github.com/pmujumdar27/go-concurrent-ft/dataservice"
 )
@@ -85,11 +86,29 @@ func main() {
 		}
 		close(jobs)
 
+		var wg sync.WaitGroup
+
 		for as := range availServers {
 			server, err := net.Dial("tcp", as)
 			handleError(err, "Dial error")
 			serverConn := dataservice.CreateMysock(server)
-			go downloadFromServer(serverConn, jobs, downloaded)
+			wg.Add(1)
+			// go downloadFromServer(serverConn, jobs, downloaded)
+			go func() {
+				defer wg.Done()
+				for req := range jobs {
+					dataservice.Write(serverConn, int64(1))
+					chunkName := fmt.Sprintf("%d_%d.tmp", req.FileHash, req.LeftOffset)
+					dataservice.GetChunk(serverConn, req, chunkName)
+					downloaded <- req
+					fmt.Println("Downloaded job put to write channel")
+				}
+				dataservice.Write(serverConn, int64(0))
+				dataservice.Close(serverConn)
+				fmt.Println("Done DOwnloading the chunks")
+				return
+			}()
+			wg.Wait()
 		}
 
 		writerToMain(filename, downloaded, fileSize)

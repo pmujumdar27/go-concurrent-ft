@@ -63,12 +63,9 @@ func requestServerList(controllerConn *dataservice.Mysock, filename string) (uin
 // }
 
 func downloadFromServer(serverConn *dataservice.Mysock, jobs <-chan *dataservice.ChunkReq, downloaded chan<- *dataservice.ChunkReq) {
-	// server, err := net.Dial("tcp", serverAddr)
-	// handleError(err, "Dial Error")
-	// serverConn := dataservice.CreateMysock(server)
 	for req := range jobs {
 		dataservice.Write(serverConn, int64(1))
-		chunkName := fmt.Sprintf("%d_%d.dwn", req.FileHash, req.LeftOffset)
+		chunkName := fmt.Sprintf("%d_%d.tmp", req.FileHash, req.LeftOffset)
 		dataservice.GetChunk(serverConn, req, chunkName)
 		downloaded <- req
 		fmt.Println("Downloaded job put to write channel")
@@ -89,7 +86,7 @@ func writerToMain(filename string, downloaded <-chan *dataservice.ChunkReq, file
 	cnt := int64(0)
 	for req := range downloaded {
 		cnt++
-		chunkName := fmt.Sprintf("recv_%d_%d.dwn", req.FileHash, req.LeftOffset)
+		chunkName := fmt.Sprintf("recv_%d_%d.tmp", req.FileHash, req.LeftOffset)
 		fmt.Println("Writting chunk", chunkName, cnt, len(downloaded))
 
 		chunkFile, err := os.Open(chunkName)
@@ -138,6 +135,8 @@ func writerToMain(filename string, downloaded <-chan *dataservice.ChunkReq, file
 
 			size = size - uint64(readSz)
 		}
+		chunkFile.Close()
+		os.Remove(chunkName)
 	}
 	fmt.Println("Chunks written", cnt)
 }
