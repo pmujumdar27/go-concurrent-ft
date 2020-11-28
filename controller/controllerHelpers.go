@@ -68,7 +68,9 @@ func runController(listener net.Listener, controllerAddr string, numServers int6
 		handleError(err, "Error in Accepting clients")
 		fmt.Println("[+] Client Connected!")
 		clientConn := dataservice.CreateMysock(client)
-		handleClient(clientConn)
+		for {
+			handleClient(clientConn)
+		}
 	}
 }
 

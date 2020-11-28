@@ -117,6 +117,6 @@ func main() {
 		// writeToMainDummy(filename, fileSize, fileHash)
 		fmt.Println("Num chunks:", numChunks)
 		fmt.Println("Done!")
-		break
+		// break
 	}
 }
